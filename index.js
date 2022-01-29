@@ -119,6 +119,22 @@ app.post('/messages', async (req, res) => {
     }
 })
 
+
+app.get('/messages', async (req, res) => {
+    try {
+        const { limit } = req.query;
+        const integerLimit = parseInt(limit);
+
+        const messages = await db.collection('messages').find({}).toArray();
+        const recentMessages = [...messages].reverse().slice(0, integerLimit);
+
+        res.status(200).send(recentMessages);
+    } catch (error) {
+        console.error(error);
+        res.sendStatus(500);
+    }
+});
+
 app.listen(5000, ()=> (
     console.log('SERVER ON'))
 );
