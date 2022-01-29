@@ -117,7 +117,7 @@ app.post('/messages', async (req, res) => {
         console.error(error);
         res.sendStatus(500);
     }
-})
+});
 
 app.get('/messages', async (req, res) => {
     try {
@@ -158,7 +158,27 @@ app.get('/messages', async (req, res) => {
     }
 });
 
+app.post('/status', async (req, res) =>{
+    try {
+        const { user } = req.headers;
 
+        const validParticipant = await db.collection('participants').findOne({ name: user});
+        
+        if(!validParticipant || !user ){
+            return res.sendStatus(404);
+        }
+
+        await db.collection('participants').updateOne(
+            { name: user },
+            { $set: { lastStatus: Date.now() }}
+        );
+        res.sendStatus(200);
+
+    } catch (error) {
+        console.error(error);
+        res.sendStatus(500);
+    }
+});
 
 app.listen(5000, ()=> (
     console.log('SERVER ON'))
