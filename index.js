@@ -121,18 +121,27 @@ app.post('/messages', async (req, res) => {
 
 app.get('/messages', async (req, res) => {
     try {
+        const { user } = req.headers; 
         const { limit } = req.query;
+
         const messages = await db.collection('messages').find({}).toArray();
         const recentMessages = [...messages].reverse();
+        
+        function validateMessage(message){
+            if(message.type === "message" || message.from === user || message.to === user){
+               return true;
+            }
+        };
+            
+        const Allowedmessages = recentMessages.filter(validateMessage);
 
         if(limit){
             const integerLimit = parseInt(limit);
-            const especificNumberOftMessages = [...recentMessages].slice(0, integerLimit);
-
+            const especificNumberOftMessages = [...Allowedmessages].slice(0, integerLimit);
             res.status(200).send(especificNumberOftMessages);
         }
 
-        res.status(200).send(recentMessages);
+        res.status(200).send(Allowedmessages);
 
     } catch (error) {
         console.error(error);
