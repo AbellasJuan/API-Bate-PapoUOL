@@ -63,6 +63,17 @@ app.post('/participants', async (req, res) => {
     }
 });
 
+app.get('/participants', async (req, res) => {
+    try {
+       
+        const participants = await db.collection('participants').find({}).toArray();
+
+        res.status(200).send(participants);
+    } catch (error) {
+        console.error(error);
+        res.sendStatus(500);
+    }
+});
 
 app.listen(5000, ()=> (
     console.log('SERVER ON'))
