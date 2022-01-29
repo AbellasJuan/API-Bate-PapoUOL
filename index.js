@@ -119,7 +119,6 @@ app.post('/messages', async (req, res) => {
     }
 })
 
-
 app.get('/messages', async (req, res) => {
     try {
         const { limit } = req.query;
