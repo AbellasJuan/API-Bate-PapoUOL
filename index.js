@@ -124,6 +124,15 @@ app.get('/messages', async (req, res) => {
         const { user } = req.headers; 
         const { limit } = req.query;
 
+        if(!user){
+            return res.status(404).send('Insira um usuário!')
+        }
+
+        const validParticipant = await db.collection('participants').findOne({ name: user});
+        if(!validParticipant){
+            return res.status(404).send('Insira um usuário válido!')
+        }
+
         const messages = await db.collection('messages').find({}).toArray();
         const recentMessages = [...messages].reverse();
         
@@ -148,6 +157,8 @@ app.get('/messages', async (req, res) => {
         res.sendStatus(500);
     }
 });
+
+
 
 app.listen(5000, ()=> (
     console.log('SERVER ON'))
