@@ -1,6 +1,6 @@
 import express, { json } from 'express';
 import cors from 'cors';
-import { MongoClient } from "mongodb";
+import { MongoClient, ObjectId} from "mongodb";
 import dotenv from 'dotenv';
 import joi from 'joi';
 import dayjs from 'dayjs';
@@ -21,7 +21,9 @@ const messagesSchema = joi.object({
 });
 
 const mongoClient = new MongoClient(process.env.MONGO_URI);
+
 let db;
+
 mongoClient.connect(() => {
     db = mongoClient.db("batePapoUOL");
 });
@@ -179,6 +181,37 @@ app.post('/status', async (req, res) =>{
         res.sendStatus(500);
     }
 });
+
+async function removeInactiveParticipants(){
+    const participants = await db.collection('participants').find({}).toArray();
+    console.log(participants);
+
+    const time = dayjs().locale('pt-br').format('HH:mm:ss');
+    
+     participants.forEach( async (participant) => {
+    
+        if(Date.now() - participant.lastStatus > 10000){
+            await db.collection("messages").insertOne(
+                {
+                    from: participant.name,
+                    to: "Todos",
+                    text: "sai na sala...",
+                    type: "status",
+                    time: time
+                }
+            );
+
+            await db.collection("participants").deleteOne(
+                { 
+                    _id: new ObjectId(participant._id)
+                }
+            )
+        
+        };
+    });
+};
+
+setInterval(removeInactiveParticipants, 15000);
 
 app.listen(5000, ()=> (
     console.log('SERVER ON'))
