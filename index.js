@@ -122,12 +122,18 @@ app.post('/messages', async (req, res) => {
 app.get('/messages', async (req, res) => {
     try {
         const { limit } = req.query;
-        const integerLimit = parseInt(limit);
-
         const messages = await db.collection('messages').find({}).toArray();
-        const recentMessages = [...messages].reverse().slice(0, integerLimit);
+        const recentMessages = [...messages].reverse();
+
+        if(limit){
+            const integerLimit = parseInt(limit);
+            const especificNumberOftMessages = [...recentMessages].slice(0, integerLimit);
+
+            res.status(200).send(especificNumberOftMessages);
+        }
 
         res.status(200).send(recentMessages);
+
     } catch (error) {
         console.error(error);
         res.sendStatus(500);
