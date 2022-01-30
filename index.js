@@ -29,8 +29,9 @@ mongoClient.connect(() => {
 });
 
 app.post('/participants', async (req, res) => {
-    try {
         const { name } = req.body;
+
+    try {
 
         const alreadyRegistered = await db.collection('participants').findOne({ name: name });
 
@@ -84,11 +85,10 @@ app.get('/participants', async (req, res) => {
 });
 
 app.post('/messages', async (req, res) => {
-
-    try{
         const { to, text, type } = req.body;
         const { user } = req.headers;
-
+    try{
+        
         const participantRegistered = await db.collection('participants').findOne({ name: user });
     
         if(!participantRegistered){
@@ -122,9 +122,10 @@ app.post('/messages', async (req, res) => {
 });
 
 app.get('/messages', async (req, res) => {
-    try {
+        
         const { user } = req.headers; 
         const { limit } = req.query;
+    try {
 
         if(!user){
             return res.status(404).send('Insira um usuário!')
@@ -134,25 +135,25 @@ app.get('/messages', async (req, res) => {
         if(!validParticipant){
             return res.status(404).send('Insira um usuário válido!')
         }
-
+        
         const messages = await db.collection('messages').find({}).toArray();
-        const recentMessages = [...messages].reverse();
+        
         
         function validateMessage(message){
-            if(message.type === "message" || message.from === user || message.to === user){
-               return true;
+            if(message.type === "message" || message.type === "status" || message.from === user || message.to === user){
+                
+                return true;
             }
         };
             
-        const Allowedmessages = recentMessages.filter(validateMessage);
+        const allowedMessages = messages.filter(validateMessage);
 
         if(limit){
-            const integerLimit = parseInt(limit);
-            const especificNumberOftMessages = [...Allowedmessages].slice(0, integerLimit);
-            res.status(200).send(especificNumberOftMessages);
+            const especificNumberOftMessages = [...allowedMessages].slice(-limit);
+            return res.status(200).send(especificNumberOftMessages);
         }
 
-        res.status(200).send(Allowedmessages);
+        res.status(200).send(allowedMessages);
 
     } catch (error) {
         console.error(error);
@@ -161,9 +162,10 @@ app.get('/messages', async (req, res) => {
 });
 
 app.post('/status', async (req, res) =>{
-    try {
-        const { user } = req.headers;
+    
+    const { user } = req.headers;
 
+    try {
         const validParticipant = await db.collection('participants').findOne({ name: user});
         
         if(!validParticipant || !user ){
@@ -195,7 +197,7 @@ async function removeInactiveParticipants(){
                 {
                     from: participant.name,
                     to: "Todos",
-                    text: "sai na sala...",
+                    text: "sai da sala...",
                     type: "status",
                     time: time
                 }
