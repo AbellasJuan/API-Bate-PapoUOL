@@ -137,8 +137,7 @@ app.get('/messages', async (req, res) => {
         }
         
         const messages = await db.collection('messages').find({}).toArray();
-        
-        
+                
         function validateMessage(message){
             if(message.type === "message" || message.type === "status" || message.from === user || message.to === user){
                 
@@ -184,9 +183,33 @@ app.post('/status', async (req, res) =>{
     }
 });
 
+app.delete('/messages/:id', async (req, res) => {
+    const { user } = req.headers;
+    const { id } = req.params;
+  
+    try {    
+        const messageToBeDeleted = await db.collection("messages").findOne({ _id: new ObjectId(id) });
+
+        if(messageToBeDeleted.from !== user){
+            return res.sendStatus(401);
+        }
+
+        if(!messageToBeDeleted){
+            return res.sendStatus(404);
+        }
+
+        await db.collection("messages").deleteOne({ _id: new ObjectId(id) });
+        res.sendStatus(200);
+        
+    }  catch (error) {
+        console.error(error);
+        res.sendStatus(500);
+    }
+});
+
+
 async function removeInactiveParticipants(){
     const participants = await db.collection('participants').find({}).toArray();
-    console.log(participants);
 
     const time = dayjs().locale('pt-br').format('HH:mm:ss');
     
