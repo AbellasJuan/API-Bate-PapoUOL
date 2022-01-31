@@ -53,8 +53,6 @@ app.post('/participants', async (req, res) => {
             }
         );
 
-        console.log('post participants' , newName);
-            
         await db.collection('messages').insertOne(
             { 
                 "from": newName,
@@ -66,7 +64,6 @@ app.post('/participants', async (req, res) => {
         );
             
         res.sendStatus(201);
-
     } catch (error) {
         console.error(error);
         res.sendStatus(500);
@@ -76,8 +73,6 @@ app.post('/participants', async (req, res) => {
 app.get('/participants', async (req, res) => {
     try {
         const participants = await db.collection('participants').find({}).toArray();
-
-        console.log(' get participants' , participants);
         res.status(200).send(participants);
     } catch (error) {
         console.error(error);
@@ -91,8 +86,6 @@ app.post('/messages', async (req, res) => {
         const newUser = stripHtml(user).result.trim();
 
     try{
-
-        console.log('post messages' , newUser);
         const participantRegistered = await db.collection('participants').findOne({ name: newUser });
     
         if(!participantRegistered){
@@ -105,7 +98,6 @@ app.post('/messages', async (req, res) => {
             return res.status(422).send(validation.error.details.map(error => error.message));
         }
 
-
         const time = dayjs().locale('pt-br').format('HH:mm:ss');
 
         await db.collection('messages').insertOne(
@@ -117,8 +109,6 @@ app.post('/messages', async (req, res) => {
                 "time": time 
             }
         );
-
-        console.log('post messages' , newUser, user);
         res.sendStatus(201);
     } catch (error) {
         console.error(error);
@@ -143,27 +133,21 @@ app.get('/messages', async (req, res) => {
         
         const messages = await db.collection('messages').find({}).toArray();
               
-        console.log('get messages' , newUser);  
-
         function validateMessage(message){
             if(message.type === "message" || message.type === "status" || message.from === newUser || message.to === newUser){
                 
                 return true;
             }
         };
-            
-        console.log('get messages' , newUser);  
+    
         const allowedMessages = messages.filter(validateMessage);
 
         if(limit){
-            const especificNumberOftMessages = [...allowedMessages].slice(-limit);
-
-        console.log('get messages limit' , newUser);  
+            const especificNumberOftMessages = [...allowedMessages].slice(-limit); 
             return res.status(200).send(especificNumberOftMessages);
         }
 
         res.status(200).send(allowedMessages);
-
     } catch (error) {
         console.error(error);
         res.sendStatus(500);
@@ -174,9 +158,7 @@ app.post('/status', async (req, res) =>{
     const { user } = req.headers;
     const newUser = stripHtml(user).result.trim();
 
-    try {
-
-        console.log('post status' , newUser);  
+    try {  
         const validParticipant = await db.collection('participants').findOne({ name: newUser});
         
         if(!validParticipant || !user ){
@@ -188,9 +170,7 @@ app.post('/status', async (req, res) =>{
             { $set: { lastStatus: Date.now() }}
         );
 
-        console.log('post status' , newUser);  
         res.sendStatus(200);
-
     } catch (error) {
         console.error(error);
         res.sendStatus(500);
@@ -203,9 +183,6 @@ app.delete('/messages/:id', async (req, res) => {
     const newUser = stripHtml(user).result.trim();
   
     try {    
-
-        console.log('DELETE MESSAGE' , newUser);  
-
         const messageToBeDeleted = await db.collection("messages").findOne({ _id: new ObjectId(id) });
 
         if(messageToBeDeleted.from !== newUser){
@@ -218,9 +195,6 @@ app.delete('/messages/:id', async (req, res) => {
 
         await db.collection("messages").deleteOne({ _id: new ObjectId(id) });
         res.sendStatus(200);
-        
-        console.log('DELETE MESSAGE' , newUser);  
-
     }  catch (error) {
         console.error(error);
         res.sendStatus(500);
@@ -232,9 +206,6 @@ async function removeInactiveParticipants(){
     const time = dayjs().locale('pt-br').format('HH:mm:ss');
     
     participants.forEach( async (participant) => {
-        
-        console.log('remove' , participant.name); 
-    
         if(Date.now() - participant.lastStatus > 10000){
             await db.collection("messages").insertOne(
                 {
@@ -257,6 +228,4 @@ async function removeInactiveParticipants(){
 
 setInterval(removeInactiveParticipants, 15000);
 
-app.listen(5000, ()=> (
-    console.log('SERVER ON'))
-);
+app.listen(5000);
